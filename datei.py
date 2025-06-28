@@ -15,7 +15,4 @@ li = [[('Latexhandschuhe', 60, 10, 'Packung', 'Labor', '17.06.2025', 'MS'),
             ('Mullkompresse 10x10', 2, 3, 'Packung', 'Labor', '17.06.2025', 'EG'),
             ('Optiskin', 2, 1, 'Stück', 'Labor', '17.06.2025', 'EG'),
             ('Leukase Puder', 1, 1, 'Stück', 'Medikamentenschrank', '17.06.2025', 'EG'),
-            ('Skalpell 15 REF', 3, 2, 'Stück', 'Labor', '17.06.2025', 'EG'),
-            ('Burak', 3, 2, 'Stück', 'Labor', '17.06.2025', 'EG'),
-  
-            ]]
+            ('Skalpell 15 REF', 3, 2, 'Stück', 'Labor', '17.06.2025', 'EG')]]
