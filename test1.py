@@ -740,6 +740,19 @@ for col in columns:
 
 treeview.pack(fill=tkinter.BOTH, expand=True)
 
+# Bu kodu treeview.pack() satırından hemen ÖNCE ekleyin:
+
+# ÇİFT TIKLAMA OLAYI EKLE
+def on_double_click(event):
+    """Çift tıklama olayı - bearbeiten() fonksiyonunu çağırır"""
+    item = treeview.selection()
+    if item:
+        bearbeiten()  # Mevcut bearbeiten fonksiyonunu çağır
+
+# Çift tıklama olayını treeview'e bağla
+treeview.bind("<Double-1>", on_double_click)
+
+
 print("Lade Daten aus Datenbank...")
 
 # WICHTIG: Datenbank erstellen falls sie nicht existiert (für erste Benutzung)
