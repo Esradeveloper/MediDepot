@@ -122,11 +122,18 @@ python test_medidepot.py
 python unit_test.py
 ```
 
-## 📱 App-Bundle erstellen (macOS)
+## 📱 App-Bundle erstellen mit PyInstaller
 
 ```bash
-pip install py2app
-python setup.py py2app
+# PyInstaller installieren
+pip install pyinstaller
+
+# App erstellen (eine einzige Datei)
+pyinstaller --onefile --windowed medidepot.py
+
+# DMG erstellen (macOS)
+# Die fertige App ist in dist/medidepot.app
+# Verwenden Sie dann create-dmg oder Disk Utility für DMG
 ```
 
 ## 🤝 Beitragen

@@ -4,14 +4,13 @@
 #Beschreibung: Programm zur Verwaltung von Medizin-Artikeln mit Datenbank
 
 
-# Alle benötigten Module importieren
-import tkinter                    # Für das Fenster und Buttons
-from tkinter import ttk, messagebox  # Für Tabelle und Popup-Fenster
-from datetime import datetime     # Für das aktuelle Datum
-import sqlite3                   # Für die Datenbank
-import os, sys                   # Für Dateipfade
+import tkinter
+from tkinter import ttk, messagebox
+from datetime import datetime
+import sqlite3
+import os, sys
+import csv
 
-print("Hauptprogramm startet...")
 
 # Variable um zu merken ob es der erste Start ist
 erster_start = False
@@ -52,13 +51,11 @@ def erstelle_datenbank_falls_nicht_vorhanden():
         tabelle_existiert = cursor.fetchone() is not None
         
         if tabelle_existiert:
-            print("Datenbank und Tabelle gefunden - verwende existierende Datenbank")
             connection.close()
             return
         
         # Merken dass es der erste Start ist
         erster_start = True
-        print("Keine Artikel-Tabelle gefunden - erstelle neue Datenbank...")
         
         # Tabelle erstellen (gleiche Struktur wie im Original)
         sql = "CREATE TABLE artikel(" \
@@ -71,34 +68,11 @@ def erstelle_datenbank_falls_nicht_vorhanden():
               "datum TEXT, " \
               "Kürzel TEXT)"
         cursor.execute(sql)
+        connection.commit()
+        connection.close()
         
-        # Beispiel-Artikel einfügen (damit die App nicht leer ist)
-        artikel = [
-            ('Latexhandschuhe', 60, 10, 'Packung', 'Labor', '17.06.2025', 'MS'),
-            ('Mullbinde 6cm', 18, 8, 'Packung', 'Labor', '17.06.2025', 'AB'),
-            ('Desinfektionsmittel', 25, 5, 'Liter', 'Lager A', '17.06.2025', 'TK'),
-            ('Einmalspritzen 5ml', 120, 20, 'Packung', 'Labor', '17.06.2025', 'MS'),
-            ('Gelbe Kanüle', 6, 5, 'Stück', 'Labor', '17.06.2025', 'EG'),
-            ('Urbason 1000mg', 3, 2, 'Stück', 'Medikamentenschrank', '17.06.2025', 'EG'),
-            ('Mullkompresse 10x10', 2, 3, 'Packung', 'Labor', '17.06.2025', 'EG'),
-            ('Optiskin', 2, 1, 'Stück', 'Labor', '17.06.2025', 'EG'),
-            ('Leukase Puder', 1, 1, 'Stück', 'Medikamentenschrank', '17.06.2025', 'EG'),
-            ('Skalpell 15 REF', 3, 2, 'Stück', 'Labor', '17.06.2025', 'EG')
-        ]
-        
-        # Alle Artikel in die Datenbank einfügen
-        cursor.executemany("""
-        INSERT INTO artikel (produktname, aktuellerbestand, mindestbestand, einheit, lagerort, datum, Kürzel)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, artikel)
-        
-        connection.commit()  # Änderungen speichern
-        connection.close()   # Datenbank schließen
-        
-        print("Neue Datenbank mit Beispieldaten erstellt!")
         
     except Exception as e:
-        print(f"Fehler beim Erstellen der Datenbank: {e}")
         messagebox.showerror("Datenbank-Fehler", 
                            f"Konnte keine Datenbank erstellen:\n{e}\n\nBitte Administrator kontaktieren.")
 
@@ -121,12 +95,10 @@ def daten_aus_db_laden():
         daten = cursor.fetchall()                     # Alle Ergebnisse holen
         conn.close()                                  # Datenbank schließen
         
-        print(f"{len(daten)} Artikel aus Datenbank geladen")
         return daten                                  # Daten zurückgeben
         
     except Exception as e:
         # Falls ein Fehler auftritt (z.B. Datenbank nicht gefunden)
-        print(f"Datenbank-Fehler: {e}")
         messagebox.showerror("Datenbank-Fehler", "Kann nicht aus Datenbank laden!")
         return []                                     # Leere Liste zurückgeben
 
@@ -323,7 +295,180 @@ def loeschen():
         except Exception as e:
             messagebox.showerror("Datenbank-Fehler", f"Konnte nicht loeschen: {e}")
 
-print("Erstelle GUI...")
+def inventur_exportieren():
+    """
+    Exportiert alle Artikel als CSV-Datei auf den Desktop für die Inventur.
+    Wird aufgerufen wenn der "Inventur exportieren" Button geklickt wird.
+    """
+    try:
+        # Desktop-Pfad ermitteln
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        
+        # Dateiname mit aktuellem Datum erstellen
+        heute = datetime.now().strftime("%Y-%m-%d_%H-%M")
+        dateiname = f"MediDepot_Inventur_{heute}.csv"
+        vollständiger_pfad = os.path.join(desktop_path, dateiname)
+        
+        # Daten aus Datenbank laden
+        daten = daten_aus_db_laden()
+        
+        if not daten:
+            messagebox.showwarning("Keine Daten", "Keine Artikel zum Exportieren gefunden!")
+            return
+        
+        # CSV-Datei erstellen
+        with open(vollständiger_pfad, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')  # Semikolon für deutsche Excel-Version
+            
+            # Spaltenüberschriften schreiben
+            writer.writerow([
+                'ID', 'Artikelname', 'Aktueller Bestand', 'Mindestbestand', 
+                'Einheit', 'Lagerort', 'Kürzel', 'Hinzugefügt am'
+            ])
+            
+            # Alle Artikel-Daten schreiben
+            for artikel in daten:
+                writer.writerow(artikel)
+        
+        # Erfolgsmeldung anzeigen
+        messagebox.showinfo("Export erfolgreich", 
+                           f"Inventur wurde erfolgreich exportiert!\n\nDatei: {dateiname}\nOrt: Desktop\n\nAnzahl Artikel: {len(daten)}")
+        
+        
+    except Exception as e:
+        messagebox.showerror("Export-Fehler", f"Konnte Inventur nicht exportieren:\n{e}")
+
+def artikel_bearbeiten(event=None):
+    """
+    Öffnet ein Bearbeitungsfenster für den ausgewählten Artikel.
+    Wird aufgerufen wenn ein Artikel in der Tabelle doppelt geklickt wird.
+    """
+    # Schritt 1: Ausgewählten Eintrag ermitteln
+    ausgewaehlt = treeview.selection()
+    
+    if not ausgewaehlt:
+        messagebox.showwarning("Warnung", "Bitte wählen Sie einen Artikel zum Bearbeiten aus!")
+        return
+    
+    # Schritt 2: Artikeldaten holen
+    item = ausgewaehlt[0]
+    values = list(treeview.item(item, 'values'))
+    artikel_id = values[0]
+    
+    # Schritt 3: Bearbeitungsfenster erstellen
+    bearbeiten_fenster = tkinter.Toplevel(fenster)
+    bearbeiten_fenster.title(f"Artikel bearbeiten - {values[1]}")
+    bearbeiten_fenster.geometry("500x400")  # GROß GENUG - alles auf einmal sichtbar!
+    bearbeiten_fenster.resizable(False, False)
+    
+    # Fenster mittig positionieren
+    bearbeiten_fenster.transient(fenster)  # Immer über Hauptfenster
+    bearbeiten_fenster.grab_set()          # Modal (andere Fenster blockiert)
+    
+    # Schritt 4: Eingabefelder erstellen mit Grid-Layout (mehr Abstand)
+    tkinter.Label(bearbeiten_fenster, text="Artikel bearbeiten", font=("Arial", 14, "bold")).grid(row=0, column=0, columnspan=2, pady=(15, 20))
+    
+    # Produktname
+    tkinter.Label(bearbeiten_fenster, text="Artikelname:").grid(row=1, column=0, sticky="w", padx=(30, 10), pady=8)
+    name_var = tkinter.StringVar(value=values[1])
+    name_entry = tkinter.Entry(bearbeiten_fenster, textvariable=name_var, width=25)
+    name_entry.grid(row=1, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    # Aktueller Bestand
+    tkinter.Label(bearbeiten_fenster, text="Aktueller Bestand:").grid(row=2, column=0, sticky="w", padx=(30, 10), pady=8)
+    bestand_var = tkinter.StringVar(value=values[2])
+    bestand_entry = tkinter.Entry(bearbeiten_fenster, textvariable=bestand_var, width=25)
+    bestand_entry.grid(row=2, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    # Mindestbestand
+    tkinter.Label(bearbeiten_fenster, text="Mindestbestand:").grid(row=3, column=0, sticky="w", padx=(30, 10), pady=8)
+    mindest_var = tkinter.StringVar(value=values[3])
+    mindest_entry = tkinter.Entry(bearbeiten_fenster, textvariable=mindest_var, width=25)
+    mindest_entry.grid(row=3, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    # Einheit
+    tkinter.Label(bearbeiten_fenster, text="Einheit:").grid(row=4, column=0, sticky="w", padx=(30, 10), pady=8)
+    einheit_var = tkinter.StringVar(value=values[4])
+    einheit_entry = tkinter.Entry(bearbeiten_fenster, textvariable=einheit_var, width=25)
+    einheit_entry.grid(row=4, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    # Lagerort
+    tkinter.Label(bearbeiten_fenster, text="Lagerort:").grid(row=5, column=0, sticky="w", padx=(30, 10), pady=8)
+    ort_var = tkinter.StringVar(value=values[5])
+    ort_entry = tkinter.Entry(bearbeiten_fenster, textvariable=ort_var, width=25)
+    ort_entry.grid(row=5, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    # Kürzel
+    tkinter.Label(bearbeiten_fenster, text="Kürzel:").grid(row=6, column=0, sticky="w", padx=(30, 10), pady=8)
+    kuerzel_var = tkinter.StringVar(value=values[6])
+    kuerzel_entry = tkinter.Entry(bearbeiten_fenster, textvariable=kuerzel_var, width=25)
+    kuerzel_entry.grid(row=6, column=1, padx=(10, 30), pady=8, sticky="w")
+    
+    def speichern_aenderungen():
+        """Speichert die Änderungen in der Datenbank"""
+        try:
+            # Eingaben validieren
+            if not all([name_var.get(), bestand_var.get(), mindest_var.get(), 
+                       einheit_var.get(), ort_var.get(), kuerzel_var.get()]):
+                messagebox.showwarning("Warnung", "Bitte füllen Sie alle Felder aus!")
+                return
+            
+            # Zahlen prüfen
+            try:
+                neuer_bestand = int(bestand_var.get())
+                neuer_mindest = int(mindest_var.get())
+            except ValueError:
+                messagebox.showerror("Fehler", "Bestand und Mindestbestand müssen Zahlen sein!")
+                return
+            
+            # In Datenbank aktualisieren
+            db_path = get_writable_path("praxislager.db")
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE artikel SET 
+                produktname = ?, aktuellerbestand = ?, mindestbestand = ?, 
+                einheit = ?, lagerort = ?, Kürzel = ?
+                WHERE artikel_id = ?
+            """, (name_var.get(), neuer_bestand, neuer_mindest, 
+                  einheit_var.get(), ort_var.get(), kuerzel_var.get(), artikel_id))
+            
+            conn.commit()
+            conn.close()
+            
+            # Tabelle neu laden
+            tabelle_neu_laden()
+            
+            # Fenster schließen
+            bearbeiten_fenster.destroy()
+            
+            messagebox.showinfo("Erfolg", "Artikel wurde erfolgreich aktualisiert!")
+            
+        except Exception as e:
+            messagebox.showerror("Datenbank-Fehler", f"Konnte nicht speichern: {e}")
+    
+    def abbrechen():
+        """Schließt das Fenster ohne zu speichern"""
+        bearbeiten_fenster.destroy()
+    
+    # Schritt 5: Buttons wie die anderen Buttons im Hauptprogramm (mit mehr Abstand)
+    speichern_btn = tkinter.Button(bearbeiten_fenster, text="Speichern", command=speichern_aenderungen,
+                                  background="green", foreground="black", font=("Arial", 10, "bold"), width=15)
+    speichern_btn.grid(row=8, column=0, padx=(30, 15), pady=(20, 15))
+    
+    abbrechen_btn = tkinter.Button(bearbeiten_fenster, text="Abbrechen", command=abbrechen,
+                                  background="gray", foreground="black", font=("Arial", 10, "bold"), width=15)
+    abbrechen_btn.grid(row=8, column=1, padx=(15, 30), pady=(20, 15))
+    
+    # Enter-Taste für Speichern
+    bearbeiten_fenster.bind('<Return>', lambda e: speichern_aenderungen())
+    # Escape-Taste für Abbrechen
+    bearbeiten_fenster.bind('<Escape>', lambda e: abbrechen())
+    
+    # Fokus auf erstes Eingabefeld
+    name_entry.focus()
+
 
 
 # HAUPTFENSTER ERSTELLEN UND KONFIGURIEREN
@@ -438,6 +583,11 @@ buLoeschen = tkinter.Button(fenster, text="Artikel löschen", command=loeschen, 
                            background="orange", foreground="black", font=("Arial", 10, "bold"))
 buLoeschen.pack(pady=10)
 
+# INVENTUR EXPORT BUTTON
+buInventur = tkinter.Button(fenster, text="Inventur exportieren (CSV)", command=inventur_exportieren, width=25,
+                           background="lightblue", foreground="black", font=("Arial", 10, "bold"))
+buInventur.pack(pady=5)
+
 # TRENNLINIE
 separator = ttk.Separator(fenster, orient='horizontal')
 separator.pack(fill=tkinter.X, padx=10, pady=5)
@@ -460,7 +610,9 @@ for col in columns:
 
 treeview.pack(fill=tkinter.BOTH, expand=True)
 
-print("Lade Daten aus Datenbank...")
+# DOPPELKLICK-EVENT FÜR BEARBEITUNG HINZUFÜGEN
+treeview.bind("<Double-1>", artikel_bearbeiten)  # Doppelklick öffnet Bearbeitung
+
 
 # WICHTIG: Datenbank erstellen falls sie nicht existiert (für erste Benutzung)
 erstelle_datenbank_falls_nicht_vorhanden()
@@ -472,6 +624,4 @@ tabelle_neu_laden()
 if erster_start:
     messagebox.showinfo("Willkommen", "Willkommen bei MediDEPOT!")
 
-print("Starte GUI...")
 fenster.mainloop()
-print("Programm beendet!")

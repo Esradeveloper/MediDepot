@@ -40,8 +40,8 @@ def pruefen():
     pw = etPasswort.get()            # Text aus dem Passwort-Feld
     
     # Schritt 2: Prüfen ob die Daten richtig sind
-    # HIER STEHEN DIE LOGIN-DATEN: Benutzername "Praxis", Passwort "malzacher1234"
-    if benutzer == "Praxis" and pw == "malzacher1234":
+    # HIER STEHEN DIE LOGIN-DATEN: Benutzername "demo", Passwort "demo123"
+    if benutzer == "demo" and pw == "demo123":
         # ERFOLG: Login-Daten sind korrekt
         lbAusgabe["text"] = "Zugang erlaubt"      # Erfolgsmeldung anzeigen
         buEnde["state"] = "normal"                # "Weiter"-Button aktivieren (anklickbar machen)

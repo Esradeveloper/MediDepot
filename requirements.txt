@@ -7,7 +7,7 @@
 # - datetime (Datum/Zeit)
 # - os, sys (Dateisystem)
 
-# Für App-Bundle (macOS) - optional:
-# py2app>=0.28
+# Für App-Bundle - optional:
+# pyinstaller>=5.0
 
 # Mindest Python-Version: 3.6+
