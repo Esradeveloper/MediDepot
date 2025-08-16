@@ -1,0 +1,13 @@
+# MediDepot - Anforderungen
+# Keine externen Pakete erforderlich - verwendet nur Python Standard-Bibliotheken
+
+# Python Standard-Bibliotheken (bereits enthalten):
+# - tkinter (GUI)
+# - sqlite3 (Datenbank)
+# - datetime (Datum/Zeit)
+# - os, sys (Dateisystem)
+
+# Für App-Bundle (macOS) - optional:
+# py2app>=0.28
+
+# Mindest Python-Version: 3.6+
