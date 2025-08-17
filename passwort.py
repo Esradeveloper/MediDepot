@@ -79,7 +79,7 @@ y = (fenster.winfo_screenheight() // 2) - (hoehe // 2)     # Y-Position berechne
 fenster.geometry(f"{breite}x{hoehe}+{x}+{y}")   # Fenster neu positionieren
 
 fenster.resizable(True, False)                   # Größe änderbar: horizontal ja, vertikal nein
-fenster.configure(bg="lightblue")                # Hintergrundfarbe des Fensters (hellblau)
+fenster.configure(bg="white")                     # Weißer Hintergrund als Fallback für Hintergrundbild
 
 
 # HINTERGRUNDBILD UND LOGO HINZUFÜGEN
