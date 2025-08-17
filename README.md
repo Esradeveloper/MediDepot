@@ -12,7 +12,10 @@ Eine benutzerfreundliche Desktop-Anwendung zur Verwaltung von medizinischen Lage
 - **Lagerverwaltung**: Einfache Verwaltung von medizinischen Artikeln
 - **Bestandsüberwachung**: Automatische Warnung bei niedrigen Beständen
 - **Zugänge & Abgänge**: Einfache Erfassung von Warenein- und ausgängen
+- **Doppelklick-Navigation**: Grid-Doppelklick für schnelle Artikelauswahl
+- **Passwort-Management**: Sichere Anmeldung mit Passwort-System
 - **Datenbank**: Automatische SQLite-Datenbank mit Beispieldaten
+- **Desktop-App**: Standalone DMG-Datei für einfache Installation
 - **Benutzerfreundlich**: Intuitive GUI mit klarer Struktur
 
 ## 🚀 Installation
@@ -63,18 +66,18 @@ Beim ersten Programmstart wird automatisch eine SQLite-Datenbank mit Beispieldat
 MediDepot/
 ├── medidepot.py          # Hauptprogramm
 ├── datenbank_erstellen.py # Datenbank-Setup (optional)
-├── datei.py              # Zusätzliche Funktionen
 ├── passwort.py           # Passwort-Funktionen
-├── test_medidepot.py     # Unit Tests
-├── unit_test.py          # Weitere Tests
-├── test.py               # Test-Datei
+├── unit_test.py          # Unit Tests
 ├── praxislager.db        # SQLite-Datenbank (wird automatisch erstellt)
+├── requirements.txt      # Python-Abhängigkeiten
 ├── daten_bilder/         # Dokumentation und Bilder
-│   ├── Benutzerdokumentation.pdf
-│   ├── logo_image.png
-│   └── ...
-├── build/                # Build-Dateien
+│   ├── Bild.png
+│   └── logo_image.png
+├── build/                # Build-Dateien (PyInstaller)
 ├── dist/                 # Distribution-Dateien
+├── MediDepot.dmg         # macOS Installer
+├── medidepot.spec        # PyInstaller Konfiguration
+├── LICENSE               # MIT Lizenz
 └── README.md             # Diese Datei
 ```
 
@@ -118,23 +121,35 @@ Das System warnt automatisch wenn:
 
 Tests ausführen:
 ```bash
-python test_medidepot.py
 python unit_test.py
 ```
 
-## 📱 App-Bundle erstellen mit PyInstaller
+## 📱 App-Bundle erstellen
 
+### Windows
 ```bash
 # PyInstaller installieren
 pip install pyinstaller
 
-# App erstellen (eine einzige Datei)
+# Executable erstellen
 pyinstaller --onefile --windowed medidepot.py
-
-# DMG erstellen (macOS)
-# Die fertige App ist in dist/medidepot.app
-# Verwenden Sie dann create-dmg oder Disk Utility für DMG
+# Ergebnis: dist/medidepot.exe
 ```
+
+### macOS
+```bash
+# PyInstaller installieren
+pip install pyinstaller
+
+# App-Bundle erstellen
+pyinstaller medidepot.spec
+# Ergebnis: dist/medidepot.app
+
+# DMG-Installer erstellen (optional)
+# Mit Disk Utility oder create-dmg
+```
+
+**Hinweis:** Die mitgelieferte `MediDepot.dmg` wurde auf macOS erstellt.
 
 ## 🤝 Beitragen
 
@@ -164,6 +179,17 @@ Bei Fragen oder Problemen:
 3. Fügen Sie Screenshots hinzu (wenn hilfreich)
 
 ## 🔄 Changelog
+
+### Version 1.2 (Aktuell)
+- Grid-Doppelklick Funktionalität hinzugefügt
+- Passwort-System implementiert  
+- macOS DMG-Installer erstellt
+- Code-Bereinigung und Optimierung
+
+### Version 1.1
+- PyInstaller Integration
+- Build-System optimiert
+- Zusätzliche Spec-Dateien
 
 ### Version 1.0
 - Grundlegende Lagerverwaltung
